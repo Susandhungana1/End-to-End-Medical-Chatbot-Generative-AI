@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical ChatBot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="chat-container">
+    <header class="chat-header">
+      <h1>🤖 Medical ChatBot</h1>
+    </header>
+    <div class="chat-box" id="chat-box">
+      <!-- Chat messages will be added here dynamically -->
+    </div>
+    <button id="scroll-top-btn" style="
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: none;
+">↑</button>
+    <form class="chat-form" id="chat-form">
+      <input type="text" id="chat-input" placeholder="Type a message..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("chat-input");
+    const scrollBtn = document.getElementById("scroll-top-btn");
+
+    chatBox.addEventListener("scroll", () => {
+      scrollBtn.style.display = chatBox.scrollTop > 100 ? "block" : "none";
+    });
+
+    scrollBtn.addEventListener("click", () => {
+      chatBox.scrollTop = 0;
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      chatBox.innerHTML += `<div class="message user">${userMessage}</div>`;
+      input.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Add this before fetching
+      chatBox.innerHTML += `<div class="message typing" id="typing-indicator">Typing...</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+
+      // Fetch response from backend
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage })
+      });
+      
+
+      const data = await res.json();
+      const botMessage = data.reply;
+      // Remove after getting response
+      document.getElementById("typing-indicator").remove();
+
+      chatBox.innerHTML += `<div class="message bot">${botMessage}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  </script>
+</body>
+</html>
